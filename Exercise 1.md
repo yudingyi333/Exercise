@@ -1045,6 +1045,13 @@ show(K_RMSE)
 50	11103.55
 100	11582.2
 
+![](https://i.imgur.com/qj4oxEg.png)
+![](https://i.imgur.com/xFWTKkf.png)
+![](https://i.imgur.com/ZQ54Bgu.png)
+![](https://i.imgur.com/3TK9h28.png)
+![](https://i.imgur.com/iPcG6KQ.png)
+![](https://i.imgur.com/VAN3Wpq.png)
+
 63K	63RMSE
 3	16623.42
 5	15958.97
@@ -1052,6 +1059,10 @@ show(K_RMSE)
 20	14949.23
 50	14857.67
 100	15781.63
-
-
+![](https://i.imgur.com/VJ6zrEH.png)
+![](https://i.imgur.com/cQzgVlf.png)
+![](https://i.imgur.com/NoAod0Q.png)
+![](https://i.imgur.com/Mh471aU.png)
+![](https://i.imgur.com/GpkEf3a.png)
+![](https://i.imgur.com/6ImCccB.png)
 ## From the data,we can see that the RMSE deceases at first and increases with K increases, thus we found that the best K for 350 is 10 or about and the best K for 63 AMG is 50 or about.
