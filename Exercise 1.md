@@ -164,24 +164,14 @@ From the data above, our group conclusion is if investors want to invest, defini
 
 #Problem 2
 
+## explanation
+We want to study some interesting things about delay in ABIA so that we can make more wise choice about choosing the time whether in the daytime or in the day for the week for flight without so much delay.
+First, we check whether the delay is positive related to the distance. However, according to the picture we draw using the data of ABIA.csv, there is not an obvious positive relation.
+Secondly, we check the data for delay of each hour. Because the data is combined by the flight for departure and arrival, we separate each flight into two groups—'dest’ which means flights arrives in Austin; ‘orig’ which means flights departure from Austin. Moreover, we add the reasons for each delay flight. According to two pictures we draw, for departure 15-20 will be the most time to be delayed; for arrival 21-23 will be the most time to be delayed.
+Thirdly, we use the data to check the delay times in the week. We find that flights on Monday, and Sunday will be more likely to be delayed while flights on Tuesday and Wednesday will be less likely to be delayed whether departs or arrives.
+
 
 library(tidyverse)
-
-ABIA
-
-ggplot(data=ABIA)+
-  geom_point(mapping = aes(x = CRSDepTime, y = DepDelay))
-
-ggplot(data=ABIA)+
-  geom_point(mapping = aes(x = Month, y = DepDelay))
-
-ggplot(data=ABIA)+
-  geom_point(mapping = aes(x = DayofMonth, y = DepDelay))
-
-ABIA[complete.cases(ABIA),]
-group_by
-ggplot(data=ABIA)+
-  geom_point(mapping = aes(x = CRSDepTime, y = DepDelay))
 
 ## DepDelay& Distance
 by_tailnum <- group_by(ABIA, TailNum)
@@ -196,65 +186,180 @@ ggplot(delay, aes(dist, delay)) +
   geom_smooth() +
   scale_size_area()
 
-
-## flights from departure from Austin delay in the daytime & reason for the delay
+##flights delay in a day & reason for delay
 library(plotly)
 src_abia <- ABIA
-orig <- subset(src_abia, Cancelled == 0 & Origin == 'AUS')
+src_abia <- subset(src_abia, Cancelled == 0 & !is.na(CRSDepTime))
+orig <- subset(src_abia, Origin == 'AUS')
+dest <- subset(src_abia, Dest == 'AUS')
 
-orig$DepTime[orig$DepTime == 2400] <- 0
-orig$DepTime <- orig$DepTime - orig$DepTime %% 100 %% 60
-orig$DepTime <- sprintf("%04d", orig$DepTime)
-orig$DepTime <- format(strptime(orig$DepTime, '%H%M'), format='%H:%M')
-orig[is.na(orig)] <- 0
-orig$ArrDelay[orig$ArrDelay < 0] <- 0
-orig$OtherDelay <- orig$ArrDelay
-orig$OtherDelay[orig$ArrDelay >= 15] <- 0
-
-orig_delay_p <- plot_ly(orig_delay, x=~Group.1, y=~CarrierDelay, type='bar', name='CarrierDelay') %>%
-  add_trace(y = ~WeatherDelay, name='WeatherDelay') %>%
-  add_trace(y = ~LateAircraftDelay, name='LateAircraftDelay') %>%
-  add_trace(y = ~SecurityDelay, name='SecurityDelay') %>%
-  add_trace(y = ~NASDelay, name='NASDelay') %>%
-  add_trace(y = ~OtherDelay, name='OtherDelay') %>%
-  layout(title = "Arrival delay (AUS depart)", xaxis=list(title='DepTime'), yaxis = list(title = 'DelayMinutes'), barmode = 'stack')
-
-print(orig_delay_p)
-
-
-## flights arrives in Austin delay in the daytime & reasons for the delay
-dest <- subset(src_abia , Cancelled == 0 & Dest == 'AUS')
-
-dest$ArrTime[dest$ArrTime == 2400] <- 0
-dest$ArrTime <- dest$ArrTime -  dest$ArrTime %% 100 %% 60
-dest$ArrTime <- sprintf("%04d", dest$ArrTime)
-dest$ArrTime <- format(strptime(dest$ArrTime, '%H%M'), format='%H:%M')
+dest$CRSDepTime[dest$CRSDepTime == 2400] <- 0
+dest$CRSDepTime <- dest$CRSDepTime - dest$CRSDepTime %% 100
+dest$CRSDepTime <- sprintf("%04d", dest$CRSDepTime)
+dest$CRSDepTime <- format(strptime(dest$CRSDepTime, '%H%M'), format='%H:%M')
 dest[is.na(dest)] <- 0
 dest$ArrDelay[dest$ArrDelay < 0] <- 0
 dest$OtherDelay <- dest$ArrDelay
 dest$OtherDelay[dest$ArrDelay >= 15] <- 0
 
+orig$CRSDepTime[orig$CRSDepTime == 2400] <- 0
+orig$CRSDepTime <- orig$CRSDepTime - orig$CRSDepTime %% 100
+orig$CRSDepTime <- sprintf("%04d", orig$CRSDepTime)
+orig$CRSDepTime <- format(strptime(orig$CRSDepTime, '%H%M'), format='%H:%M')
+orig[is.na(orig)] <- 0
+orig$ArrDelay[orig$ArrDelay < 0] <- 0
+orig$OtherDelay <- orig$ArrDelay
+orig$OtherDelay[orig$ArrDelay >= 15] <- 0
+
 delay_indices <- c('ArrDelay', 'CarrierDelay', 'WeatherDelay', 'NASDelay', 'SecurityDelay', 'LateAircraftDelay', 'OtherDelay')
-dest_delay = aggregate(dest[delay_indices], by=list(dest$ArrTime), FUN=mean)
-orig_delay = aggregate(orig[delay_indices], by=list(orig$DepTime), FUN=mean)
+dest_delay = aggregate(dest[delay_indices], by=list(DepTime=dest$CRSDepTime), FUN=mean)
+orig_delay = aggregate(orig[delay_indices], by=list(DepTime=orig$CRSDepTime), FUN=mean)
 
 
-dest_delay_p <- plot_ly(dest_delay, x=~Group.1, y=~CarrierDelay, type='bar', name='CarrierDelay') %>%
+dest_delay_p <- plot_ly(dest_delay, x=~DepTime, y=~CarrierDelay, type='bar', name='CarrierDelay') %>%
+  add_trace(y = ~NASDelay, name='NASDelay') %>%
+  add_trace(y = ~LateAircraftDelay, name='LateAircraftDelay') %>%
   add_trace(y = ~WeatherDelay, name='WeatherDelay') %>%
+  add_trace(y = ~SecurityDelay, name='SecurityDelay') %>%
+  
+  add_trace(y = ~OtherDelay, name='OtherDelay') %>%
+  layout(title = "Delay in a day (AUS dest)", xaxis=list(title='DepartTime'), yaxis = list(title = 'Delay Minutes'), barmode = 'stack')
+
+orig_delay_p <- plot_ly(orig_delay, x=~DepTime, y=~CarrierDelay, type='bar', name='CarrierDelay') %>%
+  add_trace(y = ~NASDelay, name='NASDelay') %>%
   add_trace(y = ~LateAircraftDelay, name='LateAircraftDelay') %>%
   add_trace(y = ~SecurityDelay, name='SecurityDelay') %>%
-  add_trace(y = ~NASDelay, name='NASDelay') %>%
+  add_trace(y = ~WeatherDelay, name='WeatherDelay') %>%
   add_trace(y = ~OtherDelay, name='OtherDelay') %>%
-  layout(title = "Arrival delay (AUS dest)", xaxis=list(title='ArrTime'), yaxis = list(title = 'DelayMinutes'), barmode = 'stack')
+  layout(title = "Delay in a day (AUS depart)", xaxis=list(title='DepartTime'), yaxis = list(title = 'Delay Minutes'), barmode = 'stack')
 
+print(orig_delay_p)
 print(dest_delay_p)
 
 
-## explanation
-We want to study some interesting things about delay in ABIA so that we can make more wise choice about choosing the time whether in the daytime or in the day for the week for flight without so much delay.
-First, we check whether the delay is positive related to the distance. However, according to the picture we draw using the data of ABIA.csv, there is not an obvious positive relation.
-Secondly, we check the data for delay of each hour. Because the data is combined by the flight for departure and arrival, we separate each flight into two groups—'dest’ which means flights arrives in Austin; ‘orig’ which means flights departure from Austin. Moreover, we add the reasons for each delay flight. According to two pictures we draw, for departure 22-01 will be the most time to be delayed; for arrival 24-05 will be the most time to be delayed.
-Thirdly, we use the data to check the delay times in the week. We find that flights on Tuesday and Wednesday will be more likely to be delayed while flights on Saturday and Sunday will be less likely to be delayed whether departs or arrives.
+## flights  delay in a week & reason for the delay
+library(ggplot2)
+library(ggthemes)
+
+week_idx = c('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
+
+src_abia$DayOfWeek <- factor(week_idx[src_abia$DayOfWeek], levels = rev(week_idx))
+
+orig <- subset(src_abia, Origin == 'AUS')
+dest <- subset(src_abia, Dest == 'AUS')
+
+
+dest$CRSDepTime[dest$CRSDepTime == 2400] <- 0
+dest$CRSDepTime <- dest$CRSDepTime - dest$CRSDepTime %% 100
+dest$CRSDepTime <- sprintf("%04d", dest$CRSDepTime)
+dest$CRSDepTime <- format(strptime(dest$CRSDepTime, '%H%M'), format='%H:%M')
+dest[is.na(dest)] <- 0
+dest$ArrDelay[dest$ArrDelay < 0] <- 0
+
+
+orig$CRSDepTime[orig$CRSDepTime == 2400] <- 0
+orig$CRSDepTime <- orig$CRSDepTime - orig$CRSDepTime %% 100
+orig$CRSDepTime <- sprintf("%04d", orig$CRSDepTime)
+orig$CRSDepTime <- format(strptime(orig$CRSDepTime, '%H%M'), format='%H:%M')
+orig[is.na(orig)] <- 0
+orig$ArrDelay[orig$ArrDelay < 0] <- 0
+
+
+dest_delay = aggregate(dest['ArrDelay'], by=list(DepTime=dest$CRSDepTime, DayOfWeek=dest$DayOfWeek), FUN=mean)
+orig_delay = aggregate(orig['ArrDelay'], by=list(DepTime=orig$CRSDepTime, DayOfWeek=orig$DayOfWeek), FUN=mean)
+
+
+col1 = "#a0c4a0"
+col2 = "#326262"
+col3 = "#fdd17a"
+col4 = "#ff4242"
+
+p_dest <- ggplot(dest_delay, aes(DepTime, DayOfWeek, fill=ArrDelay)) +
+  geom_point() +
+  coord_equal() + 
+  geom_tile(color = "white", size = 1.6) +
+  scale_fill_gradient(low = col1, high = col2) +
+  labs(y=NULL, fill="Delay minutes", title = "Delay in a week (AUS dest)") +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  theme_tufte(base_family = "Helvetica")
+
+p_orig <- ggplot(orig_delay, aes(DepTime, DayOfWeek, fill=ArrDelay)) +
+  geom_point() +
+  coord_equal() + 
+  geom_tile(color = "white", size = 1.6) +
+  scale_fill_gradient(low = col3, high = col4) +
+  labs(y=NULL, fill="Delay minutes", title = "Delay in a week (AUS depart)") +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+  theme_tufte(base_family = "Helvetica")
+
+print(p_orig)
+print(p_dest)
+
+![](https://i.imgur.com/70eUfbj.jpg)
+![](https://i.imgur.com/Nc7ji3h.jpg)
+![](https://i.imgur.com/Z6LlmB1.jpg)
+
+## flights  delay in a week & reason for the delay
+library(ggplot2)
+library(ggthemes)
+
+week_idx = c('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
+
+src_abia$DayOfWeek <- factor(week_idx[src_abia$DayOfWeek], levels = rev(week_idx))
+
+orig <- subset(src_abia, Origin == 'AUS')
+dest <- subset(src_abia, Dest == 'AUS')
+
+
+dest$CRSDepTime[dest$CRSDepTime == 2400] <- 0
+dest$CRSDepTime <- dest$CRSDepTime - dest$CRSDepTime %% 100
+dest$CRSDepTime <- sprintf("%04d", dest$CRSDepTime)
+dest$CRSDepTime <- format(strptime(dest$CRSDepTime, '%H%M'), format='%H:%M')
+dest[is.na(dest)] <- 0
+dest$ArrDelay[dest$ArrDelay < 0] <- 0
+
+
+orig$CRSDepTime[orig$CRSDepTime == 2400] <- 0
+orig$CRSDepTime <- orig$CRSDepTime - orig$CRSDepTime %% 100
+orig$CRSDepTime <- sprintf("%04d", orig$CRSDepTime)
+orig$CRSDepTime <- format(strptime(orig$CRSDepTime, '%H%M'), format='%H:%M')
+orig[is.na(orig)] <- 0
+orig$ArrDelay[orig$ArrDelay < 0] <- 0
+
+
+dest_delay = aggregate(dest['ArrDelay'], by=list(DepTime=dest$CRSDepTime, DayOfWeek=dest$DayOfWeek), FUN=mean)
+orig_delay = aggregate(orig['ArrDelay'], by=list(DepTime=orig$CRSDepTime, DayOfWeek=orig$DayOfWeek), FUN=mean)
+
+
+col1 = "#a0c4a0"
+col2 = "#326262"
+col3 = "#fdd17a"
+col4 = "#ff4242"
+
+p_dest <- ggplot(dest_delay, aes(DepTime, DayOfWeek, fill=ArrDelay)) +
+  geom_point() +
+  coord_equal() + 
+  geom_tile(color = "white", size = 1.6) +
+  scale_fill_gradient(low = col1, high = col2) +
+  labs(y=NULL, fill="Delay minutes", title = "Delay in a week (AUS dest)") +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  theme_tufte(base_family = "Helvetica")
+
+p_orig <- ggplot(orig_delay, aes(DepTime, DayOfWeek, fill=ArrDelay)) +
+  geom_point() +
+  coord_equal() + 
+  geom_tile(color = "white", size = 1.6) +
+  scale_fill_gradient(low = col3, high = col4) +
+  labs(y=NULL, fill="Delay minutes", title = "Delay in a week (AUS depart)") +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+  theme_tufte(base_family = "Helvetica")
+
+print(p_orig)
+print(p_dest)
+
+
 
 #Problem 3
 
