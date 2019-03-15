@@ -1,3 +1,16 @@
+---
+title: "Untitled"
+author: "Dingyi"
+date: "2019Äê3ÔÂ15ÈÕ"
+output: html_document
+---
+# Exercise 2.2
+
+By Dingyi Yu
+
+
+```{r setup_2.1, echo=FALSE, warning=FALSE}
+
 library(tidyverse)
 
 library(mosaic)
@@ -9,11 +22,17 @@ library(FNN)
 library(nnet)
 
 data(brca)
+```
+
+### Exercise 2.2.1
+
+
+
+```{r setup_2.2.1,1, echo=FALSE , warning=FALSE}
 
 #First question
 # how many cancer paitent got a definite diagnosis after they got recalled
-n = nrow(brca)
-
+n = nrow(data)
 sum(brca$recall != brca$cancer)/n
 
 
@@ -37,8 +56,8 @@ dev_out = function(ml, y, dataset) {
   -2*sum(log(phat[rc_pairs]))
   
 }
-
-glm_error = function(fo, data, Family = binomial, threshold = 0.5, Ntimes = 50){
+  
+  glm_error = function(fo, data, Family = binomial, threshold = 0.5, Ntimes = 50){
   
   n = nrow(data)
   
@@ -96,6 +115,12 @@ glm_error(recall~radiologist*(age+history+symptoms+menopause),data=brca, Ntimes 
 
 glm_error(recall~radiologist*(age+history+symptoms+menopause+density),data=brca, Ntimes = 50))
 
+threshold = sum(brca$cancer == 1)/n
+
+# We tried to build a model that could minimize the RMSE  
+
+
+
 
 # This is the model that we think have the best performance
 
@@ -108,6 +133,7 @@ model=glm(recall~radiologist+age+history+symptoms+menopause+density,data=brca)
 summary(model)
 
 
+n = nrow(brca)
 
 n_train = round(0.8*n) 
 
@@ -132,10 +158,11 @@ group_by(radiologist)%>%
 summarise(Prob_recall = mean(yhat_recall))
 
 brca_predict
-
+```
 
 ##Second question
 
+```{r setup_2.2.2, echo=FALSE , warning=FALSE}
 error= do(100)*{
   
   data = brca
@@ -267,7 +294,7 @@ deviance(ml4)
 
 deviance(ml5)  
   
-deviance(ml6)   
-  
-  
-  
+deviance(ml6)  
+
+```
+

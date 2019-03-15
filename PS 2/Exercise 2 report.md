@@ -1,6 +1,8 @@
+
 #Question1
 
 ##Saratoga house prices
+
 ###Hand build Model
 Our group has tried several models in order to minimize the RMSE, and for each model, we found 200 times trained group and test group and workout it 200 times RMSE and average them, in order to minimize the error. (If only run the model for only 1 time, there is a big possibility of random). After testing several models’ RMSE, finally, we found a satisfied model which we think it has a low RMSE, at least the RMSE of the model we used is much lower than “medium” model. The model we used is shown below: 
 
