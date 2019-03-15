@@ -1,426 +1,187 @@
 library(tidyverse)
-
 library(mosaic)
-
 library(class)
-
 library(FNN)
+library(foreach)
 
+OnlineNews=online_news
 OnlineNews$viral = ifelse(OnlineNews$shares > 1400, 1, 0)
 
-summary(OnlineNews)
+##set function to run test 
 
+rmse=function(y,yhat) {
+  sqrt (mean((y-yhat)^2))
+}
 
-### Split into training and testing sets
-
-n = nrow(OnlineNews)
-
-n_train = round(0.8*n)  # round to nearest integer
-
-n_test = n - n_train
-
-train_cases = sample.int(n, n_train, replace=FALSE)
-
-test_cases = setdiff(1:n, train_cases)
-
-OnlineNews_train = OnlineNews[train_cases,]
-
-OnlineNews_test = OnlineNews[test_cases,]
-
-
-
-### simple LM w/o polarity
-
-lm_OnlineNews_1 = lm(shares ~ n_tokens_title + n_tokens_content + num_hrefs + 
-                       
+rmse_vals = do(5)*{
+  
+  # split into train and test cases
+  n = nrow(OnlineNews)
+  n_train = round(0.8*n)  
+  n_test = n - n_train
+  train_cases = sample.int(n, n_train, replace=FALSE)
+  test_cases = setdiff(1:n, train_cases)
+  Onlinenews_train = OnlineNews[train_cases,]
+  Onlinenews_test = OnlineNews[test_cases,]
+  
+  
+  # fit to this training set 
+  ## linear models
+  ##1
+  lm_1 = lm(viral ~ n_tokens_title + n_tokens_content + num_hrefs + 
+              num_self_hrefs + num_imgs + num_videos + 
+              average_token_length + num_keywords + data_channel_is_lifestyle + 
+              data_channel_is_entertainment + data_channel_is_bus + 
+              + data_channel_is_socmed + data_channel_is_tech + 
+              data_channel_is_world + self_reference_avg_sharess + 
+              weekday_is_monday + weekday_is_tuesday + weekday_is_wednesday + 
+              weekday_is_thursday + weekday_is_friday + weekday_is_saturday + title_sentiment_polarity, data=Onlinenews_train)
+  
+  
+  lm_12 = lm(shares ~ n_tokens_title + n_tokens_content + num_hrefs + 
+               num_self_hrefs + num_imgs + num_videos + 
+               average_token_length + num_keywords + data_channel_is_lifestyle + 
+               data_channel_is_entertainment + data_channel_is_bus + 
+               + data_channel_is_socmed + data_channel_is_tech + 
+               data_channel_is_world + self_reference_avg_sharess + 
+               weekday_is_monday + weekday_is_tuesday + weekday_is_wednesday + 
+               weekday_is_thursday + weekday_is_friday + weekday_is_saturday + title_sentiment_polarity, data=Onlinenews_train)
+  
+  ##2 with interactions
+  ## the ()^2 says "include all pairwise interactions
+  lm_2 = lm(viral ~ (n_tokens_title + n_tokens_content + num_hrefs + 
                        num_self_hrefs + num_imgs + num_videos + 
-                       
                        average_token_length + num_keywords + data_channel_is_lifestyle + 
-                       
                        data_channel_is_entertainment + data_channel_is_bus + 
-                       
                        + data_channel_is_socmed + data_channel_is_tech + 
-                       
                        data_channel_is_world + self_reference_avg_sharess + 
-                       
                        weekday_is_monday + weekday_is_tuesday + weekday_is_wednesday + 
-                       
-                       weekday_is_thursday + weekday_is_friday + weekday_is_saturday, data=OnlineNews_train)
-
-
-
-### simple binomial LM w/o polarity 
-
-lm_OnlineNews_2 = lm(viral ~ n_tokens_title + n_tokens_content + num_hrefs + 
-                       
-                       num_self_hrefs + num_imgs + num_videos + 
-                       
-                       average_token_length + num_keywords + data_channel_is_lifestyle + 
-                       
-                       data_channel_is_entertainment + data_channel_is_bus + 
-                       
-                       + data_channel_is_socmed + data_channel_is_tech + 
-                       
-                       data_channel_is_world + self_reference_avg_sharess + 
-                       
-                       weekday_is_monday + weekday_is_tuesday + weekday_is_wednesday + 
-                       
-                       weekday_is_thursday + weekday_is_friday + weekday_is_saturday, data=OnlineNews_train)
-
-
-
-### simple binomial logistic w/o polarity 
-
-glm_OnlineNews_1 = glm(viral ~ n_tokens_title + n_tokens_content + num_hrefs + 
-                         
+                       weekday_is_thursday + weekday_is_friday + weekday_is_saturday + title_sentiment_polarity)^2, data=Onlinenews_train)
+  
+  
+  lm_22 = lm(shares ~ (n_tokens_title + n_tokens_content + num_hrefs + 
                          num_self_hrefs + num_imgs + num_videos + 
-                         
                          average_token_length + num_keywords + data_channel_is_lifestyle + 
-                         
                          data_channel_is_entertainment + data_channel_is_bus + 
-                         
                          + data_channel_is_socmed + data_channel_is_tech + 
-                         
                          data_channel_is_world + self_reference_avg_sharess + 
-                         
                          weekday_is_monday + weekday_is_tuesday + weekday_is_wednesday + 
-                         
-                         weekday_is_thursday + weekday_is_friday + weekday_is_saturday, data=OnlineNews_train, family=binomial)
+                         weekday_is_thursday + weekday_is_friday + weekday_is_saturday + title_sentiment_polarity)^2, data=Onlinenews_train)
+  
+  
+  
+  
+  ##3 polynomial
+  lm_3 = lm(viral ~ poly(n_tokens_title, 3) + n_tokens_content + num_hrefs + 
+              num_imgs + num_videos + 
+              poly(average_token_length, 3) + num_keywords + data_channel_is_lifestyle + 
+              data_channel_is_entertainment + data_channel_is_bus + 
+              + data_channel_is_socmed + data_channel_is_tech + 
+              data_channel_is_world + self_reference_avg_sharess + 
+              weekday_is_monday + weekday_is_tuesday + weekday_is_wednesday + 
+              weekday_is_thursday + weekday_is_friday + weekday_is_saturday + 
+              poly(avg_positive_polarity, 3) + poly(avg_negative_polarity, 3), data=Onlinenews_train)
+  
+  lm_32 = lm(shares ~ poly(n_tokens_title, 3) + n_tokens_content + num_hrefs + 
+               num_imgs + num_videos + 
+               poly(average_token_length, 3) + num_keywords + data_channel_is_lifestyle + 
+               data_channel_is_entertainment + data_channel_is_bus + 
+               + data_channel_is_socmed + data_channel_is_tech + 
+               data_channel_is_world + self_reference_avg_sharess + 
+               weekday_is_monday + weekday_is_tuesday + weekday_is_wednesday + 
+               weekday_is_thursday + weekday_is_friday + weekday_is_saturday + 
+               poly(avg_positive_polarity, 3) + poly(avg_negative_polarity, 3), data=Onlinenews_train)
+  
+  
+  
+  # predict on this testing set
+  yhat_test1 = predict(lm_1, Onlinenews_test)
+  yhat_test2 = predict(lm_12, Onlinenews_test)
+  yhat_test3 = predict(lm_2, Onlinenews_test)
+  yhat_test4 = predict(lm_22, Onlinenews_test)
+  yhat_test5 = predict(lm_3, Onlinenews_test)
+  yhat_test6 = predict(lm_32, Onlinenews_test)
+  
+  c(rmse(Onlinenews_test$viral, yhat_test1),
+    rmse(Onlinenews_test$viral, yhat_test2),
+    rmse(Onlinenews_test$viral, yhat_test3),
+    rmse(Onlinenews_test$viral, yhat_test4),
+    rmse(Onlinenews_test$viral, yhat_test5),
+    rmse(Onlinenews_test$viral, yhat_test6))
+}
 
+rmse_vals
+colMeans(rmse_vals)
 
+##We can tell that the first model is the better than others 
 
-### simple LM w/o polarity w/interaction
+## compare shares and viral, this is the result of viral 
+lm_Model <- lm_1
+yhat_train_test = predict(lm_Model, Onlinenews_train)
+class_train_test = ifelse(yhat_train_test > 0.5, 1, 0)
 
-lm_OnlineNews_4 = lm(viral ~ (n_tokens_title + n_tokens_content + num_hrefs + 
-                                
-                                num_self_hrefs + num_imgs + num_videos + 
-                                
-                                average_token_length + num_keywords + data_channel_is_lifestyle + 
-                                
-                                data_channel_is_entertainment + data_channel_is_bus + 
-                                
-                                + data_channel_is_socmed + data_channel_is_tech + 
-                                
-                                data_channel_is_world + self_reference_avg_sharess + 
-                                
-                                weekday_is_monday + weekday_is_tuesday + weekday_is_wednesday + 
-                                
-                                weekday_is_thursday + weekday_is_friday + weekday_is_saturday)^2, data=OnlineNews_train)
-
-
-
-
-
-lm_OnlineNews_5 = lm(viral ~ poly(n_tokens_title, 3) + n_tokens_content + num_hrefs + 
-                       
-                       num_imgs + num_videos + 
-                       
-                       poly(average_token_length, 3) + num_keywords + data_channel_is_lifestyle + 
-                       
-                       data_channel_is_entertainment + data_channel_is_bus + 
-                       
-                       + data_channel_is_socmed + data_channel_is_tech + 
-                       
-                       data_channel_is_world + self_reference_avg_sharess + 
-                       
-                       weekday_is_monday + weekday_is_tuesday + weekday_is_wednesday + 
-                       
-                       weekday_is_thursday + weekday_is_friday + weekday_is_saturday + 
-                       
-                       poly(avg_positive_polarity, 3) + poly(avg_negative_polarity, 3), data=OnlineNews_train)
-
-
-
-coef(lm_OnlineNews_5) %>% round(3)
-
-
-
-### Set model
-
-lm_OnlineNews_SetModel <- lm_OnlineNews_5
-
-
-
-### Predictions in sample
-
-yhat_train_test1 = predict(lm_OnlineNews_SetModel, OnlineNews_train)
-
-#summary(yhat_train_test1)
-
-class_train_test1 = ifelse(yhat_train_test1 > 0.5, 1, 0)
-
-
-
-###in sample performance
-
-confusion_in = table(y = OnlineNews_train$viral, yhat = class_train_test1)
-
+confusion_in = table(y = Onlinenews_train$viral, yhat = class_train_test)
 confusion_in
-
 sum(diag(confusion_in))/sum(confusion_in)
+sum(Onlinenews_test$viral)/count(Onlinenews_test)
 
+# test simple
+yhat_test_test = predict(lm_Model, Onlinenews_test)
+class_test_test = ifelse(yhat_test_test > 0.5, 1, 0)
 
-
-###Benchmark in sample performance
-
-sum(OnlineNews_test$viral)/count(OnlineNews_test)
-
-
-
-### Predictions out of sample
-
-yhat_test_test1 = predict(lm_OnlineNews_SetModel, OnlineNews_test)
-
-#summary(yhat_test_test1)
-
-class_test_test1 = ifelse(yhat_test_test1 > 0.5, 1, 0)
-
-
-
-###out of sample performance
-
-confusion_out = table(y = OnlineNews_test$viral, yhat = class_test_test1)
-
+confusion_out = table(y = Onlinenews_test$viral, yhat = class_test_test)
 confusion_out
-
 sum(diag(confusion_out))/sum(confusion_out)
 
+sum(Onlinenews_train$viral)/count(Onlinenews_train)
+
+## compare shares and viral, this is the result of shares 
+lm_Model2 <- lm_12
+
+yhat_train_test2 = predict(lm_Model12, Onlinenews_train)
+class_train_test2 = ifelse(yhat_train_test2 > 1400, 1, 0)
+
+confusion_in2= table(y = Onlinenews_train$shares + yhat = class_train_test2)
+confusion_in2
+sum(diag(confusion_in2))/sum(confusion_in2)
+sum(Onlinenews_test$shares)/count(Onlinenews_test)
+
+yhat_test_test2 = predict(lm_Model12, Onlinenews_test)
+class_test_test2 = ifelse(yhat_test_test2 > 1400, 1, 0)
+
+confusion_out2 = table(y = Onlinenews_test$shares, yhat = class_test_test2)
+confusion_out2
+sum(diag(confusion_out2))/sum(confusion_out2)
+
+sum(Onlinenews_train$viral)/count(Onlinenews_train)
 
 
-###Benchmark out of sample performance
-
-sum(OnlineNews_train$viral)/count(OnlineNews_train)
-
-
-
-# # Root mean-squared prediction error
-
-# rmse = function(y, yhat) {
-
-#   sqrt( mean( (y - yhat)^2 ) )
-
-# }
-
-# rmse(OnlineNews_test$shares, yhat_test1)
-lm_C_error = function(fo, data, y, threshold = 0.5, Ntimes = 50){
+rmse_vals2 = do(5)*{
   
-  n = nrow(data)
+  # re-split into train and test cases
+  n_train2 = round(0.8*n) 
+  n_test2 = n - n_train2
+  train_cases2 = sample.int(n, n_train2, replace=FALSE)
+  test_cases2 = setdiff(1:n, train_cases2)
+  Onlinenews_train2 = OnlineNews[train_cases2,]
+  Onlinenews_test2 = OnlineNews[test_cases2,]
   
-  # performance check
+  # fit to this training set
   
-  rmse_vals = do(Ntimes)*{
-    
-    
-    
-    # re-split into train and test cases
-    
-    n_train = round(0.8*n)  # round to nearest integer
-    
-    n_test = n - n_train
-    
-    train_cases = sample.int(n, n_train, replace=FALSE)
-    
-    test_cases = setdiff(1:n, train_cases)
-    
-    DF_train = data[train_cases,]
-    
-    DF_test = data[test_cases,]
-    
-    y_test = y[test_cases]
-    
-    
-    
-    # fit to this training set
-    
-    lm_result = lm(fo, data=DF_train)
-    
-    
-    
-    # predict on this testing set
-    
-    phat_test = predict(lm_result, DF_test)
-    
-    yhat_test = ifelse((phat_test>threshold), yes = 1 ,no = 0)
-    
-    sum(yhat_test != y_test)/n_test 
-    
-  }
-  
-  colMeans(rmse_vals)
-  
-}
-
-
-
-lm_C_error(shares ~ num_self_hrefs +
-             
-             (n_tokens_title + n_tokens_content + num_hrefs + 
-                
-                num_imgs + num_videos + 
-                
-                average_token_length + num_keywords + weekday_is_monday+ weekday_is_tuesday+ weekday_is_wednesday+weekday_is_thursday+weekday_is_friday+weekday_is_saturday + self_reference_avg_sharess)*
-             
-             (data_channel_is_lifestyle +
-                
+  glm_C_error(viral ~ n_tokens_title + n_tokens_content + num_hrefs + 
+                num_self_hrefs + num_imgs + num_videos + 
+                average_token_length + num_keywords + data_channel_is_lifestyle + 
                 data_channel_is_entertainment + data_channel_is_bus + 
-                
-                + data_channel_is_socmed + data_channel_is_tech +
-                
-                data_channel_is_world) ,
-           
-           data=OnlineNews, y = OnlineNews$viral, threshold = 1400, Ntimes = 50)
-
-
-
-summary(lm(shares ~ num_self_hrefs +  num_hrefs+weekday_is_monday+ weekday_is_tuesday+ weekday_is_wednesday+weekday_is_thursday+weekday_is_friday+weekday_is_saturday + 
-             
-             (n_tokens_title + n_tokens_content + 
-                
-                num_imgs + num_videos + 
-                
-                average_token_length + num_keywords + self_reference_avg_sharess)*
-             
-             (data_channel_is_lifestyle +
-                
-                data_channel_is_entertainment + data_channel_is_bus + 
-                
-                + data_channel_is_socmed + data_channel_is_tech +
-                
-                data_channel_is_world) ,
-           
-           data=OnlineNews))
-
-
-
-glm_C_error(viral ~ num_self_hrefs +  num_hrefs+weekday_is_monday+ weekday_is_tuesday+ weekday_is_wednesday+weekday_is_thursday+weekday_is_friday+weekday_is_saturday + 
-              
-              (n_tokens_title + n_tokens_content + 
-                 
-                 num_imgs + num_videos + 
-                 
-                 average_token_length + num_keywords + self_reference_avg_sharess)*
-              
-              (data_channel_is_lifestyle +
-                 
-                 data_channel_is_entertainment + data_channel_is_bus + 
-                 
-                 + data_channel_is_socmed + data_channel_is_tech +
-                 
-                 data_channel_is_world), threshold = 0.5,
-            
-            data=OnlineNews,Ntimes = 10)
-
-
-KNN_C_error_linear = function(data_X, data_y, obj_y, K = 2, threshold, Ntimes = 50){
+                + data_channel_is_socmed + data_channel_is_tech + 
+                data_channel_is_world + self_reference_avg_sharess + 
+                weekday_is_monday + weekday_is_tuesday + weekday_is_wednesday + 
+                weekday_is_thursday + weekday_is_friday + weekday_is_saturday+ title_sentiment_polarity,Family = binomial,threshold = 0.5,
+              data=OnlineNews,Ntimes = 5)  
+  glm<- glm_C_error
   
-  n = nrow(data_X)
-  
-  rmse_vals_K = do(Ntimes)*{
-    
-    # re-split into train and test cases
-    
-    n_train = round(0.8*n)  # round to nearest integer
-    
-    n_test = n - n_train
-    
-    train_cases = sample.int(n, n_train, replace=FALSE)
-    
-    test_cases = setdiff(1:n, train_cases)
-    
-    X_train = data_X[train_cases,]
-    
-    X_test = data_X[test_cases,]
-    
-    y_train = data_y[train_cases,]
-    
-    y_test = obj_y[test_cases,]
-    
-    
-    
-    # scaling
-    
-    scale_factors = apply(X_train, 2, sd)
-    
-    X_train_sc = scale(X_train, scale=scale_factors)
-    
-    # scale the test set features using the same scale factors
-    
-    X_test_sc = scale(X_test, scale=scale_factors)
-    
-    
-    
-    
-    
-    # Fit the KNN model (notice the odd values of K)
-    
-    knn_K = FNN::knn.reg(train=X_train_sc, test= X_test_sc, y = y_train, k=K)
-    
-    phat_test = knn_K$pred
-    
-    yhat_test = ifelse((phat_test>threshold), yes = 1 ,no = 0)
-    
-    sum(yhat_test != y_test)/n_test 
-    
-  }
-  
-  colMeans(rmse_vals_K)
-  
+  # predict on this testing set
+  phat_test2 = predict(glm, Onlinenews_test2, type='response')
+  yhat_test2 = ifelse(phat_test2 > threshold, 1, 0)
+  sum(yhat_test2 != unlist(Onlinenews_test2[as.character(glm[[2]])]))/n_test2
 }
-
-X = subset(OnlineNews,select = c(num_self_hrefs,n_tokens_title,n_tokens_content,num_hrefs, num_imgs,num_videos,average_token_length,num_keywords, is_weekend,data_channel_is_lifestyle,data_channel_is_entertainment,data_channel_is_bus,data_channel_is_socmed, data_channel_is_tech,data_channel_is_world, self_reference_avg_sharess))
-
-x = subset(OnlineNews,select = c(num_self_hrefs,n_tokens_title,n_tokens_content,num_hrefs, num_imgs,num_videos,average_token_length,num_keywords, is_weekend,data_channel_is_lifestyle,data_channel_is_entertainment,data_channel_is_bus,data_channel_is_socmed, data_channel_is_tech,data_channel_is_world, self_reference_avg_sharess, weekday_is_monday, weekday_is_tuesday, weekday_is_wednesday, weekday_is_thursday, weekday_is_friday, weekday_is_saturday, weekday_is_sunday,global_rate_positive_words, global_rate_negative_words, avg_positive_polarity, min_positive_polarity, max_positive_polarity, avg_negative_polarity, min_negative_polarity, max_negative_polarity, title_subjectivity, title_sentiment_polarity, abs_title_sentiment_polarity))
-
-
-
-Y = subset(OnlineNews,select = c(viral))
-
-
-
-KNN_result <- data.frame(K=c(), rsme=c())
-
-k_grid = seq(53, 250, by=30)
-
-for(v in k_grid){
-  
-  avgrmse = KNN_C_error(x,Y, K = v,Ntimes = 5)
-  
-  KNN_result <- rbind(KNN_result,c(v,avgrmse))
-  
-}
-
-colnames(KNN_result) <- c("K","AVG_RMSE")
-
-ggplot(data = KNN_result, aes(x = K, y = AVG_RMSE)) + 
-  
-  geom_point(shape = "O") +
-  
-  geom_line(col = "red")
-
-
-
-
-
-obj_Y = subset(OnlineNews,select = c(viral))
-
-
-
-KNN_result <- data.frame(K=c(), rsme=c())
-
-k_grid = seq(53, 250, by=30)
-
-for(v in k_grid){
-  
-  avgrmse = KNN_C_error_linear(data_X = x,data_y = Y,obj_y = obj_Y, K = v,threshold = 1400,Ntimes = 5)
-  
-  KNN_result <- rbind(KNN_result,c(v,avgrmse))
-  
-}
-
-colnames(KNN_result) <- c("K","AVG_RMSE")
-
-ggplot(data = KNN_result, aes(x = K, y = AVG_RMSE)) + 
-  
-  geom_point(shape = "O") +
-  
-  geom_line(col = "red")
+colMeans(rmse_vals2)

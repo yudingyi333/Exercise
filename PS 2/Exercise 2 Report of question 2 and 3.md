@@ -74,15 +74,29 @@ true positive rate from 8/(3+8)= 72.7% to 9/(2+9)= 81.8%. Although the false pos
 
 # Question3
 
-The first thing we did is try to find a good model to predict shares and viral. Regress first means we run the regression first and get the result, then we threshold it as (shares > 1400, 1, 0). We use the prediction to get the confusion matrix, overall error rate, true positive rate, and false positive rate. Threshold first means we use the threshold first and use the (1,0) prediction result directly to get 
-the confusion matrix, overall error rate, true positive rate, and false positive rate.
+Firstly, we set up our benchmark for predicting which articles go viral. Out of the 39,644 articles, 19,562 of them have gone viral. We will set this number 50.7% as our benchmark and attempt to improve it as much as we can.
+The second thing we did is try to find a good model to predict shares and viral. Regress first means we run the regression first and get the result, then we threshold it as (shares > 1400, 1, 0). We use the test sample to get a prediction and get the confusion matrix, overall error rate, true positive rate, and false positive rate. Threshold first means we use the threshold first and use the (1,0) prediction result directly to get the confusion matrix, overall error rate, true positive rate, and false positive rate. 
  
-The results show that threshold first will helps us get a better prediction.The follows is the result of viral.
+The results show that threshold first will helps us get a better prediction and lower error rate.
+
+The follows is the result of viral.
 
           >         yhat
               y      0    1        
                 0 2514 1463
                 1 1444 2508
-              Error rate =(1444+1463)/7929 = 0.36%
+              Error rate =(1444+1463)/7929 = 36%
               TPR =2508/3952=63.46%
-              FOR = 1463/(1463+2514)= 36.78%
+              FPR = 1463/(1463+2514)= 36.78%
+
+The follow is the result of shares.
+
+            >         yhat
+              y      0    1        
+                0 1355 2678
+                1  546 3350
+              Error rate =(546+2674)/7929 = 40.6%
+              TPR =3350/(3350+546)=85.98%
+              FPR = 1463/(1463+2514)= 64.40%
+
+Even the TPR of shares prediction is higher,the FPR is much higher than the FPR of viral prediction. The reason we think that why threshold first is better is because when we use the regress to predict the shares, some factors may have no linear relation with shares and the residuals may be bigger than the residuals when prediction with binary variables. We think the variables in the data are not good at creating a low variance linear relationship to predict numerical amount of shares. The variance in predicting numerical number of shares are eliminated in the binary variables prediction.
