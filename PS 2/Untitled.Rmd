@@ -1,0 +1,220 @@
+---
+title: "HW2 Question1"
+output: html_document
+---
+```{r setup, include=FALSE}
+library(tidyverse)
+library(mosaic)
+data(SaratogaHouses)
+summary(SaratogaHouses)
+```
+
+Our group has tried several models in order to minimize the RMSE, and for each model, we found 200 times train group and test group and workout it 200 times RMSE and average them, in order to minimize the error. (If only run the model for only 1 time, there is a big possibility of random). After testing several models’ RMSE, we found a satisfied model which we think it has a low RMSE, at least the RMSE of the model we used is much lower than “medium” model. The model we used is shown below: 
+price=bedrooms+ newConstruction+ heating+ fireplaces+ livingArea+ age+waterfront+centralAir+rooms*heating+landValue*lotSize+rooms*bathrooms.
+
+```{r setup, include=FALSE}
+lm_medium = lm(price ~ lotSize + age + livingArea + pctCollege + bedrooms + 
+                 fireplaces + bathrooms + rooms + heating + fuel + centralAir, data=SaratogaHouses)
+
+coef(lm_medium)
+
+# All interactions
+# the ()^2 says "include all pairwise interactions"
+lm_big = lm(price ~ (. - sewer - waterfront - landValue - newConstruction)^2, data=SaratogaHouses)
+
+lm_improve=lm(price ~ bedrooms + bathrooms +lotSize+newConstruction+heating+ rooms
+              +fireplaces+livingArea+age+waterfront+landValue+centralAir+rooms*heating
+              +landValue*lotSize+rooms*bathrooms, data=SaratogaHouses)
+coef(lm_improve)
+```
+In order to find the strong drivers of house prices, I think there are two points of views to find the strong drivers. Firstly, it is important to select if you drop any of the variable in your model, your RMSE will be much bigger. (Say your model is less correctly predict than before). Secondly, check the coefficient of each variable, this aim is to see which variable’s change can lead to big change in price. 
+
+As for the first point, our group select some variables which we think can lead to a big increase in RMSE if we drop that variables or interactions, the variable we test respectively are room*bathrooms, age, bedrooms, and centralAir. And we workout colmeans of each variable. The result is shown below (every time run the coding the result will be different, because the train group and test group are random assigned):
+
+```{r setup, include=FALSE}
+# Compare out-of-sample predictive performance
+#do200times
+# Split into training and testing sets
+rmse_vals = do(200)*{
+  n = nrow(SaratogaHouses)
+  n_train = round(0.8*n)  # round to nearest integer
+  n_test = n - n_train
+  train_cases = sample.int(n, n_train, replace=FALSE)
+  test_cases = setdiff(1:n, train_cases)
+  saratoga_train = SaratogaHouses[train_cases,]
+  saratoga_test = SaratogaHouses[test_cases,]
+  
+  # Fit to the training data
+  lm1 = lm(price ~ . - sewer - waterfront - landValue - newConstruction, data=saratoga_train)
+  lm2 = lm(price ~ (. - sewer - waterfront - landValue - newConstruction)^2, data=saratoga_train)
+  #our improved model
+  #Model0 #standard model I found
+  lmimprove=lm(price ~ bedrooms+newConstruction+heating
+               +fireplaces+livingArea+age+waterfront+centralAir+rooms*heating
+               +landValue*lotSize+rooms*bathrooms, data=saratoga_train)
+  #Model1#Model0 withouout rooms*bathrooms 
+  lmimprove1=lm(price ~ bedrooms+newConstruction+heating+rooms+landValue+lotSize+bathrooms
+                +fireplaces+livingArea+age+waterfront+centralAir+rooms*heating
+                +landValue*lotSize, data=saratoga_train)
+  #Model2#Model0 withouout age
+  lmimprove2=lm(price ~ bedrooms+newConstruction+heating+rooms+landValue+lotSize+bathrooms
+                +fireplaces+livingArea+waterfront+centralAir+rooms*heating
+                +landValue*lotSize+rooms*bathrooms, data=saratoga_train)
+  #Model3#Model0 without bedrooms
+  lmimprove3=lm(price ~ newConstruction+heating+rooms+landValue+lotSize+bathrooms
+                +fireplaces+livingArea+age+waterfront+centralAir+rooms*heating
+                +landValue*lotSize+rooms*bathrooms, data=saratoga_train)
+  #Model4#Model 0 without centralAir
+  lmimprove4=lm(price ~ bedrooms+newConstruction+heating+rooms+landValue+lotSize+bathrooms
+                +fireplaces+livingArea+age+waterfront+rooms*heating
+                +landValue*lotSize+rooms*bathrooms, data=saratoga_train)
+# Predictions out of sample
+  
+  yhat_meidum = predict(lm1, saratoga_test)
+  yhat_big = predict(lm2, saratoga_test)
+  yhat_improve = predict(lmimprove, saratoga_test)
+  yhat_improve1 = predict(lmimprove1, saratoga_test)
+  yhat_improve2 = predict(lmimprove2, saratoga_test)
+  yhat_improve3 = predict(lmimprove3, saratoga_test)
+  yhat_improve4 = predict(lmimprove4, saratoga_test)
+  
+  rmse = function(y, yhat) {
+    sqrt( mean( (y - yhat)^2 ) )
+  }
+  # predict on this testing set
+  c(rmse(saratoga_test$price, yhat_meidum),
+    rmse(saratoga_test$price, yhat_big),
+    rmse(saratoga_test$price, yhat_improve),
+    rmse(saratoga_test$price, yhat_improve1),
+    rmse(saratoga_test$price, yhat_improve2),
+    rmse(saratoga_test$price, yhat_improve3),
+    rmse(saratoga_test$price, yhat_improve4))
+}
+rmse_vals
+options(scipen=200)
+colMeans(rmse_vals)
+```
+The above result represents that:
+v1-meidium model 
+v2-big model
+v3-standard model-the model we use
+v4-v7 are the models to test which variables in v3 model are “strong drivers”
+v4-standard model without room*bathrooms variable
+v5-standared model without age variable
+v6-standard model without bedrooms variable 
+v7-standard model without centralAir Variable
+From the result above we can see standard model has the lowest RMSE. (cause it runs 200 times so the colMeans result is stable to most extent) And it is much lower than the medium model. 
+Comparing v3 with v4-v7, we can see the biggest difference with v3 is v7(without centralAir variable) the second biggest difference is V6 (without bedrooms variable) So accordingly, we think centralAir and bedrooms are strong drivers house prices according to RMSE indicator.
+
+```{r setup, include=FALSE}
+scale_train = apply(Xtrain, 2, sd)  # calculate std dev for each column
+Xtilde_train = scale(Xtrain, scale = scale_train)
+Xtilde_test = scale(Xtest, scale = scale_train)  # use the training set scales!
+
+
+lmimprove=lm(price ~ bedrooms+newConstruction+heating
+             +fireplaces+livingArea+age+waterfront+centralAir+rooms*heating
+             +landValue*lotSize+rooms*bathrooms, data=saratoga_train)
+coef(lmimprove)
+```
+As for the second point, our group will workout the coefficient of the model we select, but it is not right to directly find out their coefficient, for example: for living area and bedrooms, adding 1 more feet of living area is different from adding 1 more bedroom.
+
+After standardrization, we found the coefficient of each variable as the above coding shows.And we give a definition that top 3 coefficient variables are strong driver: so in this case, livingarea, bathrooms and landValue are 3 strong drivers.
+
+```{r setup, include=FALSE}
+#KNN MODEL 
+# construct the training and test-set feature matrices
+# note the "-1": this says "don't add a column of ones for the intercept"
+#price ~ bedrooms+newConstruction+heating+fireplaces+livingArea+age+waterfront+centralAir+rooms*heating+landValue*lotSize+rooms*bathrooms
+
+Xtrain = model.matrix(~ . - (price + pctCollege + fuel +sewer + fuel) - 1, data=saratoga_train)
+Xtest = model.matrix(~ . - (price + pctCollege + fuel +sewer + fuel) - 1, data=saratoga_test)
+```
+As the above shows we break the categorical variable in order to run KNN model, also this aim is to figure out what does the KNN model like.
+```{r setup, include=FALSE}
+# training and testing set responses
+ytrain = saratoga_train$price
+ytest = saratoga_test$price
+
+# now rescale:
+scale_train = apply(Xtrain, 2, sd)  # calculate std dev for each column
+Xtilde_train = scale(Xtrain, scale = scale_train)
+Xtilde_test = scale(Xtest, scale = scale_train)  # use the training set scales!
+
+
+head(Xtrain, 2)
+
+head(Xtilde_train, 2) %>% round(3)
+
+library(FNN)
+
+# fit the model
+knn_model = knn.reg(Xtilde_train, Xtilde_test, ytrain, k=K)
+
+# calculate test-set performance
+rmse(ytest, knn_model$pred)
+
+library(foreach)
+
+k_grid = seq(1,30,by=1) %>% round %>% unique
+rmse_grid = foreach(K = k_grid, .combine='c') %do% {
+  knn_model = knn.reg(Xtilde_train, Xtilde_test, ytrain, k=K)
+  rmse(ytest, knn_model$pred)
+}
+```
+We also need to standarized each variable as the above explained.
+```{r setup, include=False}
+# training and testing set responses
+ytrain = saratoga_train$price
+ytest = saratoga_test$price
+
+# now rescale:
+scale_train = apply(Xtrain, 2, sd)  # calculate std dev for each column
+Xtilde_train = scale(Xtrain, scale = scale_train)
+Xtilde_test = scale(Xtest, scale = scale_train)  # use the training set scales!
+
+
+head(Xtrain, 2)
+
+head(Xtilde_train, 2) %>% round(3)
+
+library(FNN)
+
+# fit the model
+knn_model = knn.reg(Xtilde_train, Xtilde_test, ytrain, k=K)
+
+# calculate test-set performance
+rmse(ytest, knn_model$pred)
+
+library(foreach)
+
+k_grid = seq(1,100,by=1) %>% round %>% unique
+rmse_grid = foreach(K = k_grid, .combine='c') %do% {
+  knn_model = knn.reg(Xtilde_train, Xtilde_test, ytrain, k=K)
+  rmse(ytest, knn_model$pred)
+}
+```
+After we need to know which K will minimize the RMSE in KNN model, so that we can use the lowest RMSE in KNN to compaere with the RMSE in handbuild model. 
+```{r setup, include=False}
+
+k_grid = seq(1,100,by=1)
+for(i in k_grid){
+  knn_model=knn.reg(Xtilde_train,Xtilde_test,ytrain,k=i)
+  rmse_value=rmse(ytest,knn_model$pred)
+  print(paste0("rmse is ",rmse_value))
+  print(paste0("K is ",i))
+}
+k_grid[which.min(rmse_grid)]
+rmse_grid[which.min(rmse_grid)]
+```
+Using the code above, we can print out what RMSE the model has and its according K. Also we can find out which K has the minimum RMSE and how much is minimized RMSE.
+
+And RMSE in KNN model is bigger than the “hand build linear model” in most cases (both models using the same train and test data set), the reason why it is most cases is becasue when we distribute train data set and test data set, the process is random so that we will have different train data set and test data set each time. But overall we can give a conclusion that linear model can predict more accurately than KNN model, so hand build linear model can turn into better performing than KNN model. 
+
+So for local taxing authority, they need to levy tax according to the price of house, as the above illustrated, the hand build model has more accurately prediction, so it is better for taxing authority using the hand build linear model to predict price:
+price=bedrooms+ newConstruction+ heating+ fireplaces+ livingArea+ age+waterfront+centralAir+rooms*heating+landValue*lotSize+rooms*bathrooms.
+And according to the predicted price, it can know how much local taxing authority should tax.
+
+
+
+
