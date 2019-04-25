@@ -84,7 +84,7 @@ plot_ly(x=social$online_gaming, y=social$personal_fitness, z=social$sports_playi
 
 # Using kmeans++ initialization
 
-clust2 = kmeanspp(X, k=6, nstart=25)
+clust2 = kmeanspp(X, k=5, nstart=25)
 
 
 
