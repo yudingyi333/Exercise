@@ -1,3 +1,3 @@
 # Exercise of Data Mining
 
-@Author Dingyi Yu Xiaoyu Xu Jiang Shuang
+Author Dingyi Yu Xiaoyu Xu Jiang Shuang
