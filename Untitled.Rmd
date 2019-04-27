@@ -1,0 +1,101 @@
+---
+title: "Exercise 4"
+author: "Xiaoyu Xu, Dingyi Yu, Shuang Jiang"
+output:
+  md_document:
+    variant: markdown_github
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+library(arules)  
+library(arulesViz)  
+library(RColorBrewer)
+library(tidyverse)
+```
+Before the start using the code to change the format of the data, so the data can be analyzed through association rule. Firstly, we need to check the general information about the data. From the summary, it shows there are 169 item and 9835 itemsets. It also shows that which item has been purchased frequently. 
+
+```{r step1, echo=FALSE, warning=FALSE}
+setwd('/Users/xuxiaoyu/Desktop')
+groceries <- read.transactions("groceries.csv", format="basket", sep=",")
+# View the statistical summary information about the dataset
+summary(groceries)
+class(groceries)
+dim(groceries)
+colnames(groceries)
+```
+
+we created a “basketSize” which indicate how many item does each itemset has. And create “itemFreq”, which indicates the frequency of each item in the data set. For example, from the summary we know that whole milk has been bought 2513 times. And the frequency of the whole milk should be 2513/9835=0.26. And adding the overall frequency together, it shows how many items each transaction bought in average. The result indicate that each transaction bought 4.409 item averagely. And use itemFreq/sum(itemFreq)*sum basketSize, we can work out how many times each item has been bought in the dataset. 
+
+According to the above, it can plot the frequency of each item, it shows the 10 most frequent item in the data set.
+
+
+```{r step2, echo=FALSE, warning=FALSE}
+# BasketSize is the number of items a transaction contains 
+basketSize <- size(groceries)
+summary(basketSize)
+basketSize
+itemFreq <- itemFrequency(groceries)
+itemFreq
+# how many items each transaction bought in average
+sum(itemFreq)
+
+itemCount <- (itemFreq/sum(itemFreq))*sum(basketSize)
+summary(itemCount)
+orderedItem <- sort(itemCount, decreasing = T )
+orderedItem
+itemFrequencyPlot(groceries, support=0.1)
+
+itemFrequencyPlot(groceries, topN=10, horiz=T)
+groceries_use <- groceries[basketSize > 1]
+dim(groceries_use)
+```
+It is important to find the correlation between each item, for example if customer buy a whole milk, what else item he/she is likely to buy, it needs three variables to analyze this correlation which are support, confidence and lift. The first rule we have set which called “groceryrules”, the rule sets support more than 0.01(if support is too low, this means the item is rarely be bought from the dataset, and it will have high random to analyze the data), confidence more than 0.25 and milen=0.2 which means out selection from each customer at least had two items. In this case, it will create 170 rules. The below is the 10 from 170 rules.
+
+And this shows items sets relationship between each other, and using support, confidence and lift to express how strong is their relationship. And the report will explain the three variables later.
+Below is the graph which shows the relationship between support, confidence and lift. 
+
+The first picture shows the relationship between support and confidence, and using the color to express the degree of lift. The second graph shows the relationship between lift and confidence and using the color to express degree of support. The third graph also shows the relationship between confidence and support, but only using two colors to express their lift, red means high lift and blue means low lift. And from the third graph, it is evident that the rules with low support usually has high lift. A guess for this is 2 items usually have big support, and 2 more items usually have small items, but two more items usually have strong relationship, because if 3 items have very strong correlations, if customer buy two of them, he will more likely to buy another one.
+
+{Root vegetables, other vegetables} support is much higher than {root vegetables, tropical fruit, other vegetables} but the second one has higher lift.
+
+```{r step3, echo=FALSE, warning=FALSE}
+# evaluation model
+groceryrules <- apriori(groceries, parameter = list(support =0.01, confidence = 0.25, minlen = 2))
+summary(groceryrules)
+inspect(groceryrules[1:10])
+inspect(groceryrules[90])#root veg=>other vege
+inspect(groceryrules[127])#root vege,tropical furit=>other vege
+plot(groceryrules)
+plot(groceryrules,measure = c("confidence","lift"),shading = "support")
+plot(groceryrules,method ='two-key plot')
+#top 10 rules
+#confidence:eg.Support(wholemilk,hard cheese)/support(hard cheese)
+#lift:support(whole milke, hard cheese)/support(whole milk)* support(hard cheese)
+#support: hard cheese, whole milk / 9935
+#count: hard cheese, whole milk count 99 times
+inspect(subset(groceryrules,lift>3&confidence > 0.5))
+```
+
+“Groceryrules”(lift=0.01, confidence=0.25, milen=0.2 in R) will be set as a foundation rule, based on this foundation rule, we increased the lift more than 0.03 confidence more than 0.5, which means the rules which under the condition, the two itemsets will have very close relationship. And there are only two rules under the condition.For example, {root vegetables, tropical fruit}=>{other vegetables}, this rule has lift 3.02, the lift more than 3 or equal 3 means strong connection between each itemset, in this case, it means if you buy root vegetables and tropical fruit, you are more likely to buy other vegetables. More specifically, the customer buy root vegetables and tropical fruit, the probability that he/she also buy other vegetables is 3.02 times than he only buy other vegetables. And under this rule, the confidence is 0.58, this means if the customers buy root vegetables and tropical fruit, the probability he will also buy other vegetables is 58%. It is a very high probability, and a guess for this is people want to make salad using the three of them, or maybe the customers who buy root vegetables and tropical fruit are vegetarian, so they are more likely to buy other vegetables.
+
+```{r step4, echo=FALSE, warning=FALSE}
+inspect(subset(groceryrules,lift>3&confidence > 0.5))
+```
+
+High confidence and high lift can shows the strong relationship between itemsets, however, the rule is too strict, only two of them can achieve the requirements, so in this case we lower the requirement, the new rules is support>=0.025, confidence>=0.2, support>=0.1 and milen>=2(number of items for each transaction). There are 41 rules in this case, again, the graph has been plotted to represent the relationship between confidence, support and lift. From the graph shows whole milk and other vegetables have high support and confidence with the others (from the nodes around them). Also, the nodes which are red shows the high degree of lift. Overall, whole milk and other vegetables has the accordingly high degree on everything with others.
+
+```{r step5, echo=FALSE, warning=FALSE}
+#second rules
+second.rules <- apriori(groceries, parameter = list(support = 0.025, confidence = 0.2))
+print(summary(second.rules))
+plot(second.rules, 
+     control=list(jitter=2, col = rev(brewer.pal(9, "Greens")[4:9])),
+     shading = "lift")  
+plot(second.rules, method="grouped",   
+     control=list(col = rev(brewer.pal(9, "Greens")[4:9])))
+plot(second.rules, measure="confidence", method="graph", 
+     control=list(type="items"),
+     shading = "lift")
+```
