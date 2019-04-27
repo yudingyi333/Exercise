@@ -1,12 +1,11 @@
+
 library(arules)  
 library(arulesViz)  
 library(RColorBrewer)
 library(tidyverse)
-
-
-myurl<- ('https://github.com/yudingyi333/Exercise/blob/master/PS4/groceries.csv')
-groceries = as(groceries, "transactions")
-
+#sorry sir for here you need to save your document manually, and documentname called "groceires.csv"
+setwd('/Users/xuxiaoyu/Desktop') 
+groceries <- read.transactions("groceries.csv", format="basket", sep=",")
 # View the statistical summary information about the dataset
 summary(groceries)
 class(groceries)
@@ -26,22 +25,12 @@ itemCount <- (itemFreq/sum(itemFreq))*sum(basketSize)
 summary(itemCount)
 orderedItem <- sort(itemCount, decreasing = T )
 orderedItem
-itemFrequencyPlot(groceries, support=0.1)
-
-itemFrequencyPlot(groceries, topN=10, horiz=T)
-groceries_use <- groceries[basketSize > 1]
-dim(groceries_use)
-
 # evaluation model
 groceryrules <- apriori(groceries, parameter = list(support =0.01, confidence = 0.25, minlen = 2))
 summary(groceryrules)
-grocery
 inspect(groceryrules[1:10])
-inspect(groceryrules[90])#root veg=>other vege
-inspect(groceryrules[127])#root vege,tropical furit=>other vege
-plot(groceryrules)
-plot(groceryrules,measure = c("confidence","lift"),shading = "support")
-plot(groceryrules,method ='two-key plot')
+
+
 #top 10 rules
 #confidence:eg.Support(wholemilk,hard cheese)/support(hard cheese)
 #lift:support(whole milke, hard cheese)/support(whole milk)* support(hard cheese)
@@ -49,7 +38,16 @@ plot(groceryrules,method ='two-key plot')
 #count: hard cheese, whole milk count 99 times
 inspect(subset(groceryrules,lift>3&confidence > 0.5))
 
+plot(groceryrules)
+plot(groceryrules,measure = c("confidence","lift"),shading = "support")
+plot(groceryrules,method ='two-key plot')
 
+inspect(groceryrules[90])#root veg=>other vege
+inspect(groceryrules[127])#root vege,tropical furit=>other vege
+
+
+
+inspect(subset(groceryrules,lift>3&confidence > 0.5))
 
 #second rules
 second.rules <- apriori(groceries, parameter = list(support = 0.025, confidence = 0.2))
@@ -62,7 +60,3 @@ plot(second.rules, method="grouped",
 plot(second.rules, measure="confidence", method="graph", 
      control=list(type="items"),
      shading = "lift")
-
-
-
-saveAsGraph(subset(groceryrules, subset=confidence>0.5&lift >2), file = "consumerrules.graphml",type="items")
