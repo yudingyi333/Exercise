@@ -1,4 +1,4 @@
-Before the start using the code to change the format of the data, so the data can be analyzed through association rule. Firstly, we need to check the general information about the data. From the summary, it shows there are 169 item and 9835 itemsets. It also shows that which item has been purchased frequently.
+Before the start, using the code to change the format of the data, so the data can be analyzed through association rule. Firstly, we need to check the general information about the data. From the summary, it shows there are 169 item and 9835 itemsets. It also shows that which item has been purchased frequently.
 
     ## transactions as itemMatrix in sparse format with
     ##  9835 rows (elements/itemsets/transactions) and
@@ -119,8 +119,6 @@ Before the start using the code to change the format of the data, so the data ca
     ## [169] "zwieback"
 
 we created a “basketSize” which indicate how many item does each itemset has. And create “itemFreq”, which indicates the frequency of each item in the data set. For example, from the summary we know that whole milk has been bought 2513 times. And the frequency of the whole milk should be 2513/9835=0.26. And adding the overall frequency together, it shows how many items each transaction bought in average. The result indicate that each transaction bought 4.409 item averagely. And use itemFreq/sum(itemFreq)\*sum basketSize, we can work out how many times each item has been bought in the dataset.
-
-According to the above, it can plot the frequency of each item, it shows the 10 most frequent item in the data set.
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
     ##   1.000   2.000   3.000   4.409   6.000  32.000
@@ -901,17 +899,15 @@ According to the above, it can plot the frequency of each item, it shows the 10 
     ##      sound storage medium 
     ##                         1
 
-![](Untitled_files/figure-markdown_github/step2-1.png)![](Untitled_files/figure-markdown_github/step2-2.png)
+According to the above, it can plot the frequency of each item, it shows the 10 most frequent item in the data set.
+
+![](HW4_Q3_Report_files/figure-markdown_github/step2%20adding-1.png)![](HW4_Q3_Report_files/figure-markdown_github/step2%20adding-2.png)
 
     ## [1] 7676  169
 
 It is important to find the correlation between each item, for example if customer buy a whole milk, what else item he/she is likely to buy, it needs three variables to analyze this correlation which are support, confidence and lift. The first rule we have set which called “groceryrules”, the rule sets support more than 0.01(if support is too low, this means the item is rarely be bought from the dataset, and it will have high random to analyze the data), confidence more than 0.25 and milen=0.2 which means out selection from each customer at least had two items. In this case, it will create 170 rules. The below is the 10 from 170 rules.
 
-And this shows items sets relationship between each other, and using support, confidence and lift to express how strong is their relationship. And the report will explain the three variables later. Below is the graph which shows the relationship between support, confidence and lift.
-
-The first picture shows the relationship between support and confidence, and using the color to express the degree of lift. The second graph shows the relationship between lift and confidence and using the color to express degree of support. The third graph also shows the relationship between confidence and support, but only using two colors to express their lift, red means high lift and blue means low lift. And from the third graph, it is evident that the rules with low support usually has high lift. A guess for this is 2 items usually have big support, and 2 more items usually have small items, but two more items usually have strong relationship, because if 3 items have very strong correlations, if customer buy two of them, he will more likely to buy another one.
-
-{Root vegetables, other vegetables} support is much higher than {root vegetables, tropical fruit, other vegetables} but the second one has higher lift.
+And this shows items sets relationship between itemsets or items, and using support, confidence and lift to express how strong is their relationship. And the report will explain the three variables later.
 
     ## Apriori
     ## 
@@ -980,6 +976,24 @@ The first picture shows the relationship between support and confidence, and usi
     ## [9]  104  
     ## [10] 101
 
+    ##     lhs                  rhs                   support confidence     lift count
+    ## [1] {citrus fruit,                                                              
+    ##      root vegetables} => {other vegetables} 0.01037112  0.5862069 3.029608   102
+    ## [2] {root vegetables,                                                           
+    ##      tropical fruit}  => {other vegetables} 0.01230300  0.5845411 3.020999   121
+
+Below is the graph which shows the relationship between support, confidence and lift. The first picture shows the relationship between support and confidence, and using the color to express the degree of lift. The second graph shows the relationship between lift and confidence and using the color to express degree of support. The third graph also shows the relationship between confidence and support, but only using two colors to express their lift, red means high lift and blue means low lift.
+
+    ## To reduce overplotting, jitter is added! Use jitter = 0 to prevent jitter.
+
+![](HW4_Q3_Report_files/figure-markdown_github/step3%20plot-1.png)![](HW4_Q3_Report_files/figure-markdown_github/step3%20plot-2.png)
+
+    ## To reduce overplotting, jitter is added! Use jitter = 0 to prevent jitter.
+
+![](HW4_Q3_Report_files/figure-markdown_github/step3%20plot-3.png)
+
+And from the third graph, it is evident that the rules with low support usually has high lift. A guess for this is 2 items usually have big support, and 2 more items usually have small items, but two more items usually have strong relationship, because if 3 items have very strong correlations, if customer buy two of them, he will more likely to buy another one.For example{Root vegetables, other vegetables} support is much higher than {root vegetables, tropical fruit, other vegetables} but the second one has higher lift.
+
     ##     lhs                  rhs                support   confidence lift    
     ## [1] {root vegetables} => {other vegetables} 0.0473818 0.4347015  2.246605
     ##     count
@@ -989,13 +1003,7 @@ The first picture shows the relationship between support and confidence, and usi
     ## [1] {root vegetables,                                                         
     ##      tropical fruit}  => {other vegetables} 0.012303  0.5845411 3.020999   121
 
-    ## To reduce overplotting, jitter is added! Use jitter = 0 to prevent jitter.
-
-![](Untitled_files/figure-markdown_github/step3-1.png)![](Untitled_files/figure-markdown_github/step3-2.png)
-
-    ## To reduce overplotting, jitter is added! Use jitter = 0 to prevent jitter.
-
-![](Untitled_files/figure-markdown_github/step3-3.png)
+“Groceryrules”(lift=0.01, confidence=0.25, milen=0.2 in R) will be set as a foundation rule, based on this foundation rule, we increased the lift more than 0.03 and confidence more than 0.5. This means under the condition, the two itemsets will have very close relationship. And there are only two rules under the condition.For example, {root vegetables, tropical fruit}=&gt;{other vegetables}, this rule has lift 3.02, the lift more than 3 or equal 3 means strong connection between each itemset, in this case, it means if you buy root vegetables and tropical fruit, you are more likely to buy other vegetables. More specifically,if the customer buy root vegetables and tropical fruit, the probability that he/she also buy other vegetables is 3.02 times than he only buy other vegetables. And under this rule, the confidence is 0.58, this means if the customers buy root vegetables and tropical fruit, the probability he will also buy other vegetables is 58%. It is a very high probability, and a guess for this is people want to make salad using the three of them, or maybe the customers who buy root vegetables and tropical fruit are vegetarian, so they are more likely to buy other vegetables.
 
     ##     lhs                  rhs                   support confidence     lift count
     ## [1] {citrus fruit,                                                              
@@ -1003,15 +1011,7 @@ The first picture shows the relationship between support and confidence, and usi
     ## [2] {root vegetables,                                                           
     ##      tropical fruit}  => {other vegetables} 0.01230300  0.5845411 3.020999   121
 
-“Groceryrules”(lift=0.01, confidence=0.25, milen=0.2 in R) will be set as a foundation rule, based on this foundation rule, we increased the lift more than 0.03 confidence more than 0.5, which means the rules which under the condition, the two itemsets will have very close relationship. And there are only two rules under the condition.For example, {root vegetables, tropical fruit}=&gt;{other vegetables}, this rule has lift 3.02, the lift more than 3 or equal 3 means strong connection between each itemset, in this case, it means if you buy root vegetables and tropical fruit, you are more likely to buy other vegetables. More specifically, the customer buy root vegetables and tropical fruit, the probability that he/she also buy other vegetables is 3.02 times than he only buy other vegetables. And under this rule, the confidence is 0.58, this means if the customers buy root vegetables and tropical fruit, the probability he will also buy other vegetables is 58%. It is a very high probability, and a guess for this is people want to make salad using the three of them, or maybe the customers who buy root vegetables and tropical fruit are vegetarian, so they are more likely to buy other vegetables.
-
-    ##     lhs                  rhs                   support confidence     lift count
-    ## [1] {citrus fruit,                                                              
-    ##      root vegetables} => {other vegetables} 0.01037112  0.5862069 3.029608   102
-    ## [2] {root vegetables,                                                           
-    ##      tropical fruit}  => {other vegetables} 0.01230300  0.5845411 3.020999   121
-
-High confidence and high lift can shows the strong relationship between itemsets, however, the rule is too strict, only two of them can achieve the requirements, so in this case we lower the requirement, the new rules is support&gt;=0.025, confidence&gt;=0.2, support&gt;=0.1 and milen&gt;=2(number of items for each transaction). There are 41 rules in this case, again, the graph has been plotted to represent the relationship between confidence, support and lift. From the graph shows whole milk and other vegetables have high support and confidence with the others (from the nodes around them). Also, the nodes which are red shows the high degree of lift. Overall, whole milk and other vegetables has the accordingly high degree on everything with others.
+High confidence and high lift can shows the strong relationship between itemsets, however, the rule is too strict, only two of them can achieve the requirements, so in this case we lower the requirement, the new rules is support&gt;=0.025, confidence&gt;=0.2, support&gt;=0.1 and milen&gt;=2(number of items for each transaction). There are 41 rules in this case, again, the graph has been plotted to represent the relationship between confidence, support and lift. We plotted several graphs to express the relationshihp between support, confidence and lift. And from the last graph,it shows whole milk and other vegetables have high support (number of arrows) and confidence with the others (from the nodes around them). Also, the nodes which are red shows the high degree of lift. Overall, whole milk and other vegetables has the accordingly high degree on every variables with other item or itemsets.
 
     ## Apriori
     ## 
@@ -1057,7 +1057,7 @@ High confidence and high lift can shows the strong relationship between itemsets
     ##       data ntransactions support confidence
     ##  groceries          9835   0.025        0.2
 
-![](Untitled_files/figure-markdown_github/step5-1.png)![](Untitled_files/figure-markdown_github/step5-2.png)
+![](HW4_Q3_Report_files/figure-markdown_github/step5-1.png)![](HW4_Q3_Report_files/figure-markdown_github/step5-2.png)
 
     ## Available control parameters (with default values):
     ## main  =  Graph for 41 rules
@@ -1079,4 +1079,4 @@ High confidence and high lift can shows the strong relationship between itemsets
     ## max   =  100
     ## verbose   =  FALSE
 
-![](Untitled_files/figure-markdown_github/step5-3.png)
+![](HW4_Q3_Report_files/figure-markdown_github/step5-3.png)
