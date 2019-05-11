@@ -135,12 +135,84 @@ lm5 = lm(price ~.-tradeTime,data = X5)
 
 summary(lm5)
 
-qplot(price, data=X1)
+train_data1 = X1 %>% filter (as.numeric (substr(tradeTime,1,4))<2017)
 
-qplot(price, data=X2)
+test_data1 = X1 %>% filter (as.numeric (substr(tradeTime,1,4))>=2017)
 
-qplot(price, data=X3)
+lm1 = lm(price ~ 1, data=train_data1)
 
-qplot(price, data=X4)
 
-qplot(price, data=X5)
+
+#7463
+
+lm_forward = step(lm1, direction='forward',
+                  
+                  scope=~(DOM + followers + square+
+                            
+                            livingRoom + drawingRoom + kitchen + bathRoom +buildingType 
+                          
+                          + constructionTime + renovationCondition + buildingStructure +ladderRatio + elevator+ fiveYearsProperty
+                          
+                          +subway + district + communityAverage)^2)
+
+
+
+lm1medium = lm(price~DOM + followers + square+
+                 
+                 livingRoom + drawingRoom + kitchen + bathRoom +buildingType 
+               
+               + constructionTime + renovationCondition + buildingStructure +ladderRatio + elevator+ fiveYearsProperty
+               
+               +subway + district + communityAverage,data=train_data1)
+
+#AIC=7382
+
+lm_step = step(lm1medium, 
+               
+               scope=~(DOM + followers + square+
+                         
+                         livingRoom + drawingRoom + kitchen + bathRoom +buildingType 
+                       
+                       + constructionTime + renovationCondition + buildingStructure +ladderRatio + elevator+ fiveYearsProperty
+                       
+                       +subway + district + communityAverage)^2)
+
+
+
+
+
+lmX1=lm(price ~ DOM + followers + square + livingRoom + drawingRoom + 
+          
+          bathRoom + buildingType + constructionTime + renovationCondition + 
+          
+          buildingStructure + ladderRatio + elevator + fiveYearsProperty + 
+          
+          district + communityAverage + ladderRatio:communityAverage + 
+          
+          square:elevator + renovationCondition:communityAverage + 
+          
+          bathRoom:buildingStructure + followers:renovationCondition + 
+          
+          buildingStructure:ladderRatio + constructionTime:ladderRatio + 
+          
+          drawingRoom:buildingStructure + bathRoom:renovationCondition + 
+          
+          followers:square + followers:elevator + DOM:constructionTime + 
+          
+          livingRoom:elevator + livingRoom:constructionTime + followers:ladderRatio + 
+          
+          buildingType:communityAverage + buildingType:elevator + DOM:square + 
+          
+          DOM:followers,data=train_data1)
+
+
+
+yhat_1 = predict(lmX1, test_data1)
+
+rmse = function(y, yhat) {
+  
+  sqrt( mean( (y - yhat)^2 ) )
+  
+}
+
+rmse(test_data1$price, yhat_1)
