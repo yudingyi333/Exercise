@@ -4,20 +4,7 @@ library(foreach)
 library(doMC)
 library(ggplot2)
 
-
-
-library(LICORS)  # for kmeans++
-
-
-
-library(foreach)
-
-
-
-library(mosaic)
-
 summary(beijing.house.price)
-lm0 = lm(price ~ .,data = beijing.house.price)
 
 M = beijing.house.price[,-c(3)]
 M = scale(M, center = TRUE, scale =TRUE)
@@ -32,58 +19,13 @@ clust1 = kmeans(M, 5, nstart=50)
 
 clust1$center[1,]*sigma + mu
 
-
-
 clust1$center[2,]*sigma + mu
-
-
 
 clust1$center[4,]*sigma + mu
 
-which(clust1$cluster == 1)
-
-
-
-which(clust1$cluster == 2)
-
-
-
-which(clust1$cluster == 3)
-
-
-
-which(clust1$cluster == 4)
-
-
-
-which(clust1$cluster == 5)
-
-
-qplot(square, price, data=beijing.house.price, color=factor(clust1$cluster))
-
-qplot(price,buildingType,data=beijing.house.price, color=factor(clust1$cluster))
-
-
-
-qplot(health_nutrition, personal_fitness, data=social, color=factor(clust1$cluster))
-
-
-
-plot_ly(x=price, y=square, z=subway, data= beijing.house.price, type="scatter3d", mode="markers", color=factor(clust1$cluster))%>%
-  
-  layout(
-    
-    title = "Market Sagement in 3D",
-    
-    scene = list(
-      
-      xaxis = list(title = "price"),
-      
-      yaxis = list(title = "square"),
-      
-      zaxis = list(title = "subway")
-      
-    ))
+qplot(square,price, data=beijing.house.price, col=factor(clust1$cluster))
+qplot(buildingType,price, data=beijing.house.price, col=factor(clust1$cluster))
+qplot(followers,price, data=beijing.house.price, col=factor(clust1$cluster))
 
 pc2 = prcomp(M, rank=5)
 
@@ -161,3 +103,44 @@ colnames(M)[head(o4,10)]
 o5 = order(loadings[,5], decreasing=TRUE)
 
 colnames(M)[head(o5,10)]
+
+
+X1 = subset(beijing.house.price,clust1$cluster == 1)
+
+lm1 = lm(price ~.-tradeTime,data = X1)
+
+summary(lm1)
+
+X2 = subset(beijing.house.price,clust1$cluster == 2)
+
+lm2 = lm(price ~.-tradeTime,data = X2)
+
+summary(lm2)
+
+X3 = subset(beijing.house.price,clust1$cluster == 3)
+
+lm3 = lm(price ~.- tradeTime,data = X3)
+
+summary(lm3)
+
+X4 = subset(beijing.house.price,clust1$cluster == 4)
+
+lm4 = lm(price ~.-tradeTime,data = X4)
+
+summary(lm4)
+
+X5 = subset(beijing.house.price,clust1$cluster == 5)
+
+lm5 = lm(price ~.-tradeTime,data = X5)
+
+summary(lm5)
+
+qplot(price, data=X1)
+
+qplot(price, data=X2)
+
+qplot(price, data=X3)
+
+qplot(price, data=X4)
+
+qplot(price, data=X5)
