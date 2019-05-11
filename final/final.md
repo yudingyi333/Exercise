@@ -1,4 +1,6 @@
+
 #Final project
+
 
 ## 1.Motivation
 Real estate is the first investment option for people in China during past 10 years, thus how will house price goes is always a hot topic among people. In our final project, we will  do some anaylsis about the house price of Beijing. There are many types of rooms on the market. Which is the best one for you to invest? Which kind of house should you choice? This is then interesting to look at the prices since it may reflect several changes China has been in recent years.
