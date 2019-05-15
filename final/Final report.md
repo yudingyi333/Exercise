@@ -158,6 +158,7 @@ And this may because in expensive house cluster, the price of the house is commo
 In order to use the “pricing model”, it is important to collect the variables data and substituted the data in this model to see what is the house price which is ran by the model. So can give the house a price in value, to see if the house price now is understated or overstated. And there is one thing important, to find according cluster model to predict, for example, cluster4 model, it has high price character, so it needs to find the house price which is more than 10000 rmb/ square. So for example, if the after substituting the data, the price predicted by the cluster4 model is 15,000 rmb/ square, and the price now is 17,000 rmb, then it is not valuable to buy the house.
 
 
+
 ##4 Conclusion
 As our data shows above, we found that the expensive house has the most accurate price forecast which means that if you give me the characteristics of a luxury real estate, we could have the best prediction of it. That is to say the more expensive house, the better its price stay increasing trend because the inflation and the lower risk it faces.
 
@@ -166,6 +167,7 @@ As our data shows above, we found that the expensive house has the most accurate
 As the graph shows, the most expensive house are located in Chaoyang district which has the most yellow points. If you want buy a house in Beijing, our suggestion is buy the house in Chaoyang.
 
 It is interesting to see that there's a missing piece of data in the middle. Houses in city center should be more expensive. At first, we think something wrong with our data. It took us sometime to remember that it is forbidden City in the middle.
+
 
 ##5 What problem we have or need to improve
 
