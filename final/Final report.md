@@ -1,5 +1,5 @@
 
-#Final project
+# Final project
 
 
 ## 1.Motivation
@@ -159,7 +159,9 @@ In order to use the “pricing model”, it is important to collect the variable
 
 
 
-##4 Conclusion
+## 4 Conclusion
+
+
 As our data shows above, we found that the expensive house has the most accurate price forecast which means that if you give me the characteristics of a luxury real estate, we could have the best prediction of it. That is to say the more expensive house, the better its price stay increasing trend because the inflation and the lower risk it faces.
 
 ![](https://i.imgur.com/kdtr5ow.png)
@@ -169,7 +171,8 @@ As the graph shows, the most expensive house are located in Chaoyang district wh
 It is interesting to see that there's a missing piece of data in the middle. Houses in city center should be more expensive. At first, we think something wrong with our data. It took us sometime to remember that it is forbidden City in the middle.
 
 
-##5 What problem we have or need to improve
+## 5 What problem we have or need to improve
+
 
 Firstly, because we work in groups of three, each memebers have different clusters. Thus there are a lot of misrepresentations about the number of clusters. We tried our best to find every mistake and correct them. 
 
